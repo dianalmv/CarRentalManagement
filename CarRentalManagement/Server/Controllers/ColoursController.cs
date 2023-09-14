@@ -11,7 +11,7 @@ using CarRentalManagement.Server.IRepository;
 
 namespace CarRentalManagement.Server.Controllers
 {
-	[Route("[controller]")]
+	[Route("api/[controller]")]
 	[ApiController]
 	public class ColoursController : ControllerBase
 	{
@@ -105,7 +105,7 @@ namespace CarRentalManagement.Server.Controllers
 		private async Task<bool> ColourExists(int id)
 		{
 			var Colour = await _unitOfWork.Colours.Get(q => q.Id == id);
-			return Colour == null;
+			return Colour != null;
 		}
 	}
 }

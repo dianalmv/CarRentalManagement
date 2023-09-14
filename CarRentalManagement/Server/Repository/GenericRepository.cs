@@ -10,11 +10,10 @@ namespace CarRentalManagement.Server.Repository
 	{
 		private readonly ApplicationDbContext _context;
 		private readonly DbSet<T> _db;
-		private ApplicationDbContext context;
 
 		public GenericRepository(ApplicationDbContext context)
 		{
-			this.context = context;
+			_context = context;
 		}
 
 		public GenericRepository(ApplicationDbContext context, DbSet<T> db)
@@ -34,7 +33,7 @@ namespace CarRentalManagement.Server.Repository
 			_db.RemoveRange(entities);
 		}
 
-		public async Task<T> Get(Expression<Func<T, bool>> expression, List<string>? includes = null)
+		public async Task<T> Get(Expression<Func<T, bool>> expression, List<string> includes = null)
 		{
 			IQueryable<T> query = _db;
 			if(includes != null)
@@ -49,9 +48,9 @@ namespace CarRentalManagement.Server.Repository
 #pragma warning restore CS8603 // Posible tipo de valor devuelto de referencia nulo
 		}
 
-		public async Task<IList<T>> GetAll(Expression<Func<T, bool>>? expression = null,
-			Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
-			List<string>? includes = null)
+		public async Task<IList<T>> GetAll(Expression<Func<T, bool>> expression = null,
+			Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+			List<string> includes = null)
 		
 		{
 			IQueryable<T> query = _db;
@@ -93,12 +92,12 @@ namespace CarRentalManagement.Server.Repository
 			_context.Entry(entity).State = EntityState.Modified;
 		}
 
-		Task<List<T>> IGenericRepository<T>.Get(Expression<Func<T, bool>> expression, List<string>? includes)
+		Task<List<T>> IGenericRepository<T>.Get(Expression<Func<T, bool>> expression, List<string> includes)
 		{
 			throw new NotImplementedException();
 		}
 
-		Task<List<T>> IGenericRepository<T>.GetAll(Expression<Func<T, bool>>? expression, Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy, List<string>? includes)
+		Task<List<T>> IGenericRepository<T>.GetAll(Expression<Func<T, bool>> expression, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy, List<string> includes)
 		{
 			throw new NotImplementedException();
 		}

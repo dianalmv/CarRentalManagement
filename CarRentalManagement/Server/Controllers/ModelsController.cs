@@ -7,157 +7,106 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CarRentalManagement.Server.Data;
 using CarRentalManagement.Shared.Domain;
+using CarRentalManagement.Server.IRepository;
 
 namespace CarRentalManagement.Server.Controllers
 {
-    public class ModelsController : Controller
-    {
-        private readonly ApplicationDbContext _context;
+	[Route("api/[controller]")]
+	[ApiController]
+	public class ModelsController : ControllerBase
+	{
+		private readonly IUnitOfWork _unitOfWork;
 
-        public ModelsController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+		public ModelsController(IUnitOfWork unitOfWork)
+		{
+			_unitOfWork = unitOfWork;
+		}
 
-        // GET: Models
-        public async Task<IActionResult> Index()
-        {
-              return _context.Models != null ? 
-                          View(await _context.Models.ToListAsync()) :
-                          Problem("Entity set 'ApplicationDbContext.Models'  is null.");
-        }
+		// GET: /Models
+		[HttpGet]
+		public async Task<IActionResult> GetModels()
+		{
+			var Models = await _unitOfWork.Models.GetAll();
+			return Ok(Models);
+		}
 
-        // GET: Models/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null || _context.Models == null)
-            {
-                return NotFound();
-            }
+		// GET: /Models/5
+		[HttpGet("{id}")]
+		public async Task<IActionResult> GetModel(int? id)
+		{
 
-            var model = await _context.Models
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (model == null)
-            {
-                return NotFound();
-            }
+			var Model = await _unitOfWork.Models.Get(q => q.Id == id);
 
-            return View(model);
-        }
+			if (Model == null)
+			{
+				return NotFound();
+			}
 
-        // GET: Models/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
+			return Ok(Model);
+		}
 
-        // POST: Models/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,Id,CreatedBy,UpdatedBy,DateCreated,DateUpdated")] Model model)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(model);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(model);
-        }
+		// PUT: /Models/5
+		// To protect from over posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+		[HttpPut("{id}")]
+		public async Task<IActionResult> PutModel(int id, Model Model)
+		{
+			if (id != Model.Id)
+			{
+				return BadRequest();
+			}
 
-        // GET: Models/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null || _context.Models == null)
-            {
-                return NotFound();
-            }
+			_unitOfWork.Models.Update(Model);
 
-            var model = await _context.Models.FindAsync(id);
-            if (model == null)
-            {
-                return NotFound();
-            }
-            return View(model);
-        }
+			try
+			{
+				await _unitOfWork.Save(HttpContext);
+			}
+			catch (DbUpdateConcurrencyException)
+			{
+				if (!await ModelExists(id))
+				{
+					return NotFound();
+				}
+				else
+				{
+					throw;
+				}
+			}
 
-        // POST: Models/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int? id, [Bind("Name,Id,CreatedBy,UpdatedBy,DateCreated,DateUpdated")] Model model)
-        {
-            if (id != model.Id)
-            {
-                return NotFound();
-            }
+			return NoContent();
+		}
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(model);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ModelExists(model.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(model);
-        }
+		// POST: api/Models
+		// To protect from over posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+		[HttpPost]
+		public async Task<ActionResult<Model>> PostModel(Model Model)
+		{
+			await _unitOfWork.Models.Insert(Model);
+			await _unitOfWork.Save(HttpContext);
 
-        // GET: Models/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null || _context.Models == null)
-            {
-                return NotFound();
-            }
+			return CreatedAtAction("GetModel", new { id = Model.Id }, Model);
+		}
 
-            var model = await _context.Models
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (model == null)
-            {
-                return NotFound();
-            }
+		// DELETE: api/Models/5
+		[HttpDelete("{id}")]
+		public async Task<IActionResult> DeleteModel(int id)
+		{
+			var Model = await _unitOfWork.Models.Get(q => q.Id == id);
+			if (Model == null)
+			{
+				return NotFound();
+			}
+			await _unitOfWork.Models.Delete(id);
+			await _unitOfWork.Save(HttpContext);
 
-            return View(model);
-        }
+			return NoContent();
+		}
 
-        // POST: Models/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int? id)
-        {
-            if (_context.Models == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.Models'  is null.");
-            }
-            var model = await _context.Models.FindAsync(id);
-            if (model != null)
-            {
-                _context.Models.Remove(model);
-            }
-            
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool ModelExists(int? id)
-        {
-          return (_context.Models?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
-    }
+		private async Task<bool> ModelExists(int id)
+		{
+			var Model = await _unitOfWork.Models.Get(q => q.Id == id);
+			return Model != null;
+		}
+	}
 }
+

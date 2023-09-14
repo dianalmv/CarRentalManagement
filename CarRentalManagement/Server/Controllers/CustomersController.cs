@@ -7,157 +7,105 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CarRentalManagement.Server.Data;
 using CarRentalManagement.Shared.Domain;
+using CarRentalManagement.Server.IRepository;
 
 namespace CarRentalManagement.Server.Controllers
 {
-    public class CustomersController : Controller
-    {
-        private readonly ApplicationDbContext _context;
+	[Route("api/[controller]")]
+	[ApiController]
+	public class CustomersController : ControllerBase
+	{
+		private readonly IUnitOfWork _unitOfWork;
 
-        public CustomersController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+		public CustomersController(IUnitOfWork unitOfWork)
+		{
+			_unitOfWork = unitOfWork;
+		}
 
-        // GET: Customers
-        public async Task<IActionResult> Index()
-        {
-              return _context.Customers != null ? 
-                          View(await _context.Customers.ToListAsync()) :
-                          Problem("Entity set 'ApplicationDbContext.Customers'  is null.");
-        }
+		// GET: /Customers
+		[HttpGet]
+		public async Task<IActionResult> GetCustomers()
+		{
+			var Customers = await _unitOfWork.Customers.GetAll();
+			return Ok(Customers);
+		}
 
-        // GET: Customers/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null || _context.Customers == null)
-            {
-                return NotFound();
-            }
+		// GET: /Customers/5
+		[HttpGet("{id}")]
+		public async Task<IActionResult> GetCustomer(int? id)
+		{
 
-            var customer = await _context.Customers
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (customer == null)
-            {
-                return NotFound();
-            }
+			var Customer = await _unitOfWork.Customers.Get(q => q.Id == id);
 
-            return View(customer);
-        }
+			if (Customer == null)
+			{
+				return NotFound();
+			}
 
-        // GET: Customers/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
+			return Ok(Customer);
+		}
 
-        // POST: Customers/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("TaxiId,Address,ContactNumber,EmailAddress,Id,CreatedBy,UpdatedBy,DateCreated,DateUpdated")] Customer customer)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(customer);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(customer);
-        }
+		// PUT: /Customers/5
+		// To protect from over posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+		[HttpPut("{id}")]
+		public async Task<IActionResult> PutCustomer(int id, Customer Customer)
+		{
+			if (id != Customer.Id)
+			{
+				return BadRequest();
+			}
 
-        // GET: Customers/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null || _context.Customers == null)
-            {
-                return NotFound();
-            }
+			_unitOfWork.Customers.Update(Customer);
 
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null)
-            {
-                return NotFound();
-            }
-            return View(customer);
-        }
+			try
+			{
+				await _unitOfWork.Save(HttpContext);
+			}
+			catch (DbUpdateConcurrencyException)
+			{
+				if (!await CustomerExists(id))
+				{
+					return NotFound();
+				}
+				else
+				{
+					throw;
+				}
+			}
 
-        // POST: Customers/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int? id, [Bind("TaxiId,Address,ContactNumber,EmailAddress,Id,CreatedBy,UpdatedBy,DateCreated,DateUpdated")] Customer customer)
-        {
-            if (id != customer.Id)
-            {
-                return NotFound();
-            }
+			return NoContent();
+		}
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(customer);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CustomerExists(customer.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(customer);
-        }
+		// POST: api/Customers
+		// To protect from over posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+		[HttpPost]
+		public async Task<ActionResult<Customer>> PostCustomer(Customer Customer)
+		{
+			await _unitOfWork.Customers.Insert(Customer);
+			await _unitOfWork.Save(HttpContext);
 
-        // GET: Customers/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null || _context.Customers == null)
-            {
-                return NotFound();
-            }
+			return CreatedAtAction("GetCustomer", new { id = Customer.Id }, Customer);
+		}
 
-            var customer = await _context.Customers
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (customer == null)
-            {
-                return NotFound();
-            }
+		// DELETE: api/Customers/5
+		[HttpDelete("{id}")]
+		public async Task<IActionResult> DeleteCustomer(int id)
+		{
+			var Customer = await _unitOfWork.Customers.Get(q => q.Id == id);
+			if (Customer == null)
+			{
+				return NotFound();
+			}
+			await _unitOfWork.Customers.Delete(id);
+			await _unitOfWork.Save(HttpContext);
 
-            return View(customer);
-        }
+			return NoContent();
+		}
 
-        // POST: Customers/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int? id)
-        {
-            if (_context.Customers == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.Customers'  is null.");
-            }
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer != null)
-            {
-                _context.Customers.Remove(customer);
-            }
-            
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool CustomerExists(int? id)
-        {
-          return (_context.Customers?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
-    }
+		private async Task<bool> CustomerExists(int id)
+		{
+			var Customer = await _unitOfWork.Customers.Get(q => q.Id == id);
+			return Customer != null;
+		}
+	}
 }

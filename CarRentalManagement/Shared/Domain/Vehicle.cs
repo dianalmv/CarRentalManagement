@@ -10,14 +10,14 @@ namespace CarRentalManagement.Shared.Domain
 	{
 		public int Year { get; set; }
 		public int ModelID { get; set; }
-		public virtual Model? Models { get; set; }
+		public virtual Model Models { get; set; }
 		public int MakeID { get; set; }
-		public virtual Make? Makes { get; set; }
-		public virtual Colour? Colour { get; set; }
+		public virtual Make Makes { get; set; }
+		public virtual Colour Colour { get; set; }
 		public int ColourID { get; set; }
-		public string? Vin { get; set; }
-		public string? LicensePlateNumber { get; set; }
-		public double? RentalRate { get; set; }
-		public virtual List<Booking>? Bookings { get; set; }
+		public string Vin { get; set; }
+		public string LicensePlateNumber { get; set; }
+		public double RentalRate { get; set; }
+		public virtual List<Booking> Bookings { get; set; }
 	}
 }

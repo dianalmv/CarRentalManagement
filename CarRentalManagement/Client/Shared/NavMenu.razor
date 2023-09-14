@@ -31,8 +31,33 @@
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="fetchdata" >
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
+            <NavLink class="nav-link" href="/api/makes" >
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Makes
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/api/models">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Models
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/api/colours">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Colours
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/api/vehicles">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Vehicles
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/api/customers">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Customers
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/api/bookings">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Bookings
             </NavLink>
         </div>
         <div class="nav-item px-3">
@@ -46,7 +71,7 @@
 @code {
     private bool collapseNavMenu = true;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     private void ToggleNavMenu()
     {
